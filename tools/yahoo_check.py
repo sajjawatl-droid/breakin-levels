@@ -23,3 +23,12 @@ for sym, tk in [("ES", "ES=F"), ("NQ", "NQ=F")]:
         cl = float(u.c.iloc[-1]) if len(u) else float("nan")
         r = ref.get((pd.Timestamp(d).strftime("%Y.%m.%d"), sym))
         print(f"  {d} bars {len(b):4d} last {b.index.max().strftime('%H:%M')} vol {int(b.v.sum()):>8d} | yahoo {vah:.2f}/{val:.2f}/{poc:.2f}/{cl:.2f} | databento {r}")
+print("--- detail")
+for sym, tk, d in [("NQ","NQ=F","2026-11-09"),("ES","ES=F","2026-11-10"),("ES","ES=F","2026-11-06")]:
+    df = yf.download(tk, period="8d", interval="1m", progress=False, auto_adjust=False, prepost=True)
+    if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+    df.index = pd.to_datetime(df.index, utc=True).tz_convert(NY)
+    b = df[(df.index + pd.Timedelta(hours=6)).date == pd.Timestamp(d).date()]
+    print(sym, d, "high", b.High.max(), "low", b.Low.min(), "min range max", (b.High-b.Low).max())
+    print(b.sort_values("Volume").tail(5)[["Open","High","Low","Close","Volume"]].to_string())
+    h = b.Volume.groupby(b.index.hour).sum(); print("vol by NY hour", h.to_dict())
