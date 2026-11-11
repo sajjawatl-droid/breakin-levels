@@ -1,0 +1,28 @@
+name: Backtest history download
+on:
+  workflow_dispatch:
+    inputs:
+      dataset: {description: "Databento dataset", default: "GLBX.MDP3"}
+      symbol: {description: "Continuous symbol", default: "NKD.v.0"}
+      start: {description: "Start date", default: "2017-01-01"}
+      maxcost: {description: "Max cost USD", default: "10"}
+      dry: {description: "1 = only print cost", default: "1"}
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install databento pandas
+      - run: python tools/history.py
+        env:
+          DATABENTO_API_KEY: ${{ secrets.DATABENTO_API_KEY }}
+          DATASET: ${{ inputs.dataset }}
+          SYMBOL: ${{ inputs.symbol }}
+          START: ${{ inputs.start }}
+          MAXCOST: ${{ inputs.maxcost }}
+          DRY: ${{ inputs.dry }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.dry != '1' }}
+        with: {name: history, path: "hist_*.csv.gz", retention-days: 1}
