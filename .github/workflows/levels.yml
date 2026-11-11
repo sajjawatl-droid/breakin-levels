@@ -7,6 +7,8 @@ on:
     - cron: "40 21 * * 1-5"
     - cron: "10 22 * * 1-5"
     - cron: "40 22 * * 1-5"
+    # Databento (exchange data, ~8h delayed) re-checks and corrects the Yahoo levels the next morning UTC.
+    - cron: "15 7 * * 2-6"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -18,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install databento pandas numpy
+      - run: pip install databento pandas numpy yfinance
       - run: python levels_feed.py
         env:
           DATABENTO_API_KEY: ${{ secrets.DATABENTO_API_KEY }}
