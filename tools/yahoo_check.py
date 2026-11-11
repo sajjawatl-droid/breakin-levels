@@ -23,10 +23,12 @@ for sym, tk in [("ES", "ES=F"), ("NQ", "NQ=F")]:
         cl = float(u.c.iloc[-1]) if len(u) else float("nan")
         r = ref.get((pd.Timestamp(d).strftime("%Y.%m.%d"), sym))
         print(f"  {d} bars {len(b):4d} last {b.index.max().strftime('%H:%M')} vol {int(b.v.sum()):>8d} | yahoo {vah:.2f}/{val:.2f}/{poc:.2f}/{cl:.2f} | databento {r}")
-print("--- detail")
+print("--- detail2")
 df = yf.download("NQ=F", period="8d", interval="1m", progress=False, auto_adjust=False, prepost=True)
 if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
 df.index = pd.to_datetime(df.index, utc=True).tz_convert(NY)
 b = df[(df.index + pd.Timedelta(hours=6)).date == pd.Timestamp("2026-11-09").date()]
-print(b.head(12)[["Open","High","Low","Close","Volume"]].to_string())
-print(b[b.Low < 27200][["Open","High","Low","Close","Volume"]].head(15).to_string(), len(b[b.Low<27200]))
+print(b.head(8)[["Open","High","Low","Close","Volume"]].to_string())
+lo = b[b.Low < 27250]
+print("bars below 27250:", len(lo), "volume", int(lo.Volume.sum()))
+print(lo.head(10)[["Open","High","Low","Close","Volume"]].to_string())
