@@ -1,7 +1,8 @@
 """Nightly job: build yesterday's ES/NQ levels from Yahoo 1-minute bars right after the close, then
 correct them with Databento (CME Globex) data once it is published (~8h later);
 compute the 70% value area of each full CME session and append it to levels.csv.
-Line format (read by BreakIn_EA): yyyy.mm.dd,SYM,VAH,VAL,POC,close_at_15:59_NY
+Line format (read by BreakIn_EA): yyyy.mm.dd,SYM,VAH,VAL,POC,close_at_15:59_NY,session_high,session_low
+(high/low were added later; older lines have only the first six fields, and the EA reads either form).
 The date is the session's end date (the day it closes at 16:00 New York)."""
 import os, sys, datetime as dt
 import pandas as pd
@@ -12,6 +13,9 @@ NY = "America/New_York"
 OUT = "levels.csv"
 SYMS = {"ES": "ES.v.0", "NQ": "NQ.v.0"}   # front month by volume (handles quarterly rolls)
 DAYS_BACK = int(os.environ.get("DAYS_BACK", "7"))
+
+def line(date, sym, lv):
+    return f"{date},{sym},{lv[0]:.2f},{lv[1]:.2f},{lv[2]:.2f},{lv[3]:.2f},{lv[4]:.2f},{lv[5]:.2f}"
 
 def load(path):
     if not os.path.exists(path): return {}
@@ -44,7 +48,7 @@ def yahoo(rows):
             bars = bars[bars.v <= 50 * med]          # Yahoo sometimes dumps the day's volume into one bar
             lv = session_levels(bars, sym)
             if lv is None: continue
-            rows[key] = f"{key[0]},{sym},{lv[0]:.2f},{lv[1]:.2f},{lv[2]:.2f},{lv[3]:.2f}"
+            rows[key] = line(key[0], sym, lv)
             print("yahoo added", rows[key]); added += 1
     return added
 
@@ -77,7 +81,7 @@ def main():
             key = (pd.Timestamp(d).strftime("%Y.%m.%d"), sym)
             lv = session_levels(bars, sym)
             if lv is None: print(sym, d, "skipped (short or incomplete session)"); continue
-            new = f"{key[0]},{sym},{lv[0]:.2f},{lv[1]:.2f},{lv[2]:.2f},{lv[3]:.2f}"
+            new = line(key[0], sym, lv)
             if rows.get(key) == new: continue
             print(("replaced " + rows[key] + " ->" if key in rows else "added"), new); rows[key] = new; added += 1
     with open(OUT, "w") as fh:
