@@ -32,7 +32,8 @@ def value_area(base, prof, T, vb, rows, pct=0.70):
     return (b0 + hi) * T, (b0 + p) * T, (b0 + lo) * T
 
 def session_levels(bars, sym):
-    """bars: DataFrame of one session (NY-time index). Returns (vah, val, poc, close_1559) or None."""
+    """bars: DataFrame of one session (NY-time index).
+    Returns (vah, val, poc, close_1559, session_high, session_low) or None."""
     if len(bars) < 1300: return None          # holiday short session -> no levels (EA skips it too)
     last = bars.index.max()
     if last.hour < 16 or (last.hour == 16 and last.minute < 45): return None   # session not finished yet
@@ -42,4 +43,4 @@ def session_levels(bars, sym):
     upto = bars[bars.index.strftime("%H:%M") <= "15:59"]
     upto = upto[upto.index.hour >= 9]          # same calendar day's RTH part
     if not len(upto): return None
-    return vah, val, poc, float(upto.c.iloc[-1])
+    return vah, val, poc, float(upto.c.iloc[-1]), float(bars.h.max()), float(bars.l.min())

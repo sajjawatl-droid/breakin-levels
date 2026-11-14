@@ -4,7 +4,10 @@ Every weekday after the CME session ends (17:00 New York), GitHub Actions runs `
 it downloads the session's ES and NQ 1-minute bars from Databento (CME Globex), builds the 70% value
 area the same way the backtest does, and appends one line per market to `levels.csv`:
 
-    yyyy.mm.dd,SYM,VAH,VAL,POC,close_at_15:59_NY
+    yyyy.mm.dd,SYM,VAH,VAL,POC,close_at_15:59_NY,session_high,session_low
+
+The last two fields (the session's high and low) are used by the EA's High-Trap setup. Lines written
+before they were added have only the first six fields; the EA reads both forms.
 
 The EA reads the file from
 `https://raw.githubusercontent.com/<user>/<repo>/main/levels.csv` (set as its LevelsURL input).
